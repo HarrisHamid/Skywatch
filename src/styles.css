@@ -307,24 +307,43 @@ body,
   color: var(--text-muted);
 }
 
-.dash__more {
+.dash__pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash__page-btn {
   background: rgba(0, 240, 220, 0.05);
   border: 1px solid var(--border);
   color: var(--accent-cyan);
   font-family: var(--font-mono);
   font-size: 8px;
-  letter-spacing: 0.18em;
-  padding: 6px 10px;
+  width: 24px;
+  height: 22px;
   cursor: pointer;
-  white-space: nowrap;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.dash__more:hover,
-.dash__more:focus-visible {
+.dash__page-btn:hover:not(:disabled),
+.dash__page-btn:focus-visible {
   border-color: var(--accent-cyan);
   background: rgba(0, 240, 220, 0.12);
   outline: none;
+}
+
+.dash__page-btn:disabled {
+  color: var(--text-muted);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dash__page-num {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-primary);
+  min-width: 38px;
+  text-align: center;
 }
 
 /* ─── Hover tooltip ──────────────────────────────────────────────────────── */

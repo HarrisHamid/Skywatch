@@ -7,7 +7,7 @@
 import type { FlightState } from "./flights";
 import { altitudeColor, formatFeet, formatKnots, M_TO_FT, MS_TO_KT } from "./altitude";
 
-/** Rows added to the contact list per "show more" click. */
+/** Contacts shown per page of the list. */
 const PAGE_SIZE = 100;
 
 /** Callbacks the dashboard reports back through. */
@@ -21,7 +21,7 @@ let listEl: HTMLElement | null = null;
 let callbacks: DashboardCallbacks | null = null;
 
 let searchQuery = "";
-let visibleCount = PAGE_SIZE;
+let currentPage = 0;
 let lastFlights: ReadonlyArray<FlightState> = [];
 let lastSelected: string | null = null;
 
@@ -84,9 +84,11 @@ export function initDashboard(container: HTMLElement, cb: DashboardCallbacks): v
     <ul class="dash__list" data-field="list"></ul>
     <div class="dash__footer">
       <p class="dash__count" data-field="count">—</p>
-      <button class="dash__more" data-field="more" type="button" hidden>
-        ▾ SHOW ${PAGE_SIZE} MORE
-      </button>
+      <div class="dash__pager" data-field="pager" hidden>
+        <button class="dash__page-btn" data-field="prev" type="button" aria-label="Previous page">◀</button>
+        <span class="dash__page-num" data-field="page">1/1</span>
+        <button class="dash__page-btn" data-field="next" type="button" aria-label="Next page">▶</button>
+      </div>
     </div>
 
     <button class="dash__toggle" type="button" aria-label="Toggle dashboard">◀</button>
@@ -95,16 +97,21 @@ export function initDashboard(container: HTMLElement, cb: DashboardCallbacks): v
   const input = dash.querySelector<HTMLInputElement>("input[type=search]");
   input?.addEventListener("input", () => {
     searchQuery = input.value.trim().toLowerCase();
-    visibleCount = PAGE_SIZE;
+    currentPage = 0;
     renderList();
   });
 
+  const turnPage = (delta: number): void => {
+    currentPage += delta;
+    renderList();
+    listEl?.scrollTo({ top: 0 });
+  };
   dash
-    .querySelector<HTMLButtonElement>('[data-field="more"]')
-    ?.addEventListener("click", () => {
-      visibleCount += PAGE_SIZE;
-      renderList();
-    });
+    .querySelector<HTMLButtonElement>('[data-field="prev"]')
+    ?.addEventListener("click", () => turnPage(-1));
+  dash
+    .querySelector<HTMLButtonElement>('[data-field="next"]')
+    ?.addEventListener("click", () => turnPage(1));
 
   listEl = dash.querySelector<HTMLElement>('[data-field="list"]');
   listEl?.addEventListener("click", (e) => {
@@ -186,7 +193,12 @@ function renderList(): void {
   const sorted = [...filtered].sort((a, b) =>
     (a.callsign || a.icao24).localeCompare(b.callsign || b.icao24)
   );
-  const visible = sorted.slice(0, visibleCount);
+
+  // Clamp the page — the fleet shrinks and grows between poll cycles.
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  currentPage = Math.min(Math.max(currentPage, 0), totalPages - 1);
+  const start = currentPage * PAGE_SIZE;
+  const visible = sorted.slice(start, start + PAGE_SIZE);
 
   listEl.innerHTML = visible
     .map((f) => {
@@ -209,11 +221,17 @@ function renderList(): void {
   const countEl = rootEl.querySelector<HTMLElement>('[data-field="count"]');
   if (countEl) {
     countEl.textContent =
-      filtered.length > visible.length
-        ? `SHOWING ${visible.length} OF ${filtered.length.toLocaleString("en-US")} CONTACTS`
-        : `${filtered.length.toLocaleString("en-US")} CONTACTS`;
+      sorted.length > PAGE_SIZE
+        ? `${start + 1}–${start + visible.length} OF ${sorted.length.toLocaleString("en-US")}`
+        : `${sorted.length.toLocaleString("en-US")} CONTACTS`;
   }
 
-  const moreBtn = rootEl.querySelector<HTMLButtonElement>('[data-field="more"]');
-  if (moreBtn) moreBtn.hidden = filtered.length <= visible.length;
+  const pager = rootEl.querySelector<HTMLElement>('[data-field="pager"]');
+  if (pager) pager.hidden = totalPages <= 1;
+  const pageEl = rootEl.querySelector<HTMLElement>('[data-field="page"]');
+  if (pageEl) pageEl.textContent = `${currentPage + 1}/${totalPages}`;
+  const prevBtn = rootEl.querySelector<HTMLButtonElement>('[data-field="prev"]');
+  if (prevBtn) prevBtn.disabled = currentPage === 0;
+  const nextBtn = rootEl.querySelector<HTMLButtonElement>('[data-field="next"]');
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
 }
