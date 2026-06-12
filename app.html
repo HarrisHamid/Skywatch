@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SKYWATCH — Live Flight Telemetry</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 L35 22 L60 36 L60 42 L35 34 L34 48 L42 54 L42 58 L32 55 L22 58 L22 54 L30 48 L29 34 L4 42 L4 36 L29 22 L32 4 Z' fill='%2300f0dc'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="globe" aria-hidden="true"></canvas>
+      <div id="map"></div>
+
+      <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+
+      <div class="map-controls">
+        <button
+          id="toggle-planes"
+          class="map-toggle map-toggle--active"
+          type="button"
+          aria-pressed="true"
+          title="Show or hide aircraft"
+        >✈ PLANES</button>
+      </div>
+
+      <div class="legend" aria-hidden="true">
+        <span>GND</span>
+        <div class="legend__bar"></div>
+        <span>36K FT</span>
+      </div>
+
+      <div id="skeleton" class="skeleton" aria-label="Loading flight data">
+        <div class="skeleton__bar"></div>
+        <div class="skeleton__bar"></div>
+        <div class="skeleton__bar"></div>
+      </div>
+
+      <div id="toast" class="toast" role="alert">
+        <p class="toast__label">FEED FAULT</p>
+        <p class="toast__message"></p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

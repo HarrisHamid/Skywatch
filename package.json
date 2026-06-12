@@ -15,11 +15,15 @@
     "@deck.gl/core": "^9.3.3",
     "@deck.gl/layers": "^9.3.3",
     "@deck.gl/mapbox": "^9.3.3",
+    "d3-geo": "^3.1.1",
+    "d3-timer": "^3.0.1",
     "express": "^4.19.0",
     "mapbox-gl": "^3.5.0",
     "three": "^0.165.0"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/d3-timer": "^3.0.2",
     "@types/express": "^4.17.21",
     "@types/mapbox-gl": "^3.1.0",
     "@types/three": "^0.165.0",

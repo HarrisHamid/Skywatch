@@ -114,6 +114,7 @@ let selectedIcao: string | null = null;
 let selectedRoute: FlightRoute | null = null;
 let firstDataArrived = false;
 let consecutiveFeedErrors = 0;
+let showPlanes = true;
 
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
@@ -150,6 +151,9 @@ function leaderTip(d: FlightState): [number, number] {
  * @returns Layers ready to hand to `MapboxOverlay.setProps`.
  */
 function buildLayers(): Layer[] {
+  // Aircraft hidden by the toggle — airports stay (they're Mapbox layers).
+  if (!showPlanes) return [];
+
   const stale = isDataStale();
   const alpha = stale ? 140 : 255;
   const zoom = map.getZoom();
@@ -637,6 +641,16 @@ if (import.meta.env.DEV) {
 function redraw(): void {
   overlay.setProps({ layers: buildLayers() });
 }
+
+// Aircraft visibility toggle (bottom-right control).
+const planesToggle = document.getElementById("toggle-planes");
+planesToggle?.addEventListener("click", () => {
+  showPlanes = !showPlanes;
+  planesToggle.classList.toggle("map-toggle--active", showPlanes);
+  planesToggle.setAttribute("aria-pressed", String(showPlanes));
+  if (!showPlanes) setTooltip(null);
+  redraw();
+});
 
 // Clicking empty map space clears the selection.
 map.on("click", (e) => {

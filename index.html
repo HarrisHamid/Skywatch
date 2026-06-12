@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SKYWATCH — Live Flight Telemetry</title>
+    <title>SKYWATCH — Track Every Flight Across the U.S.</title>
+    <meta
+      name="description"
+      content="Live radar-style tracking of 7,000+ aircraft over the continental United States. Real-time positions, altitudes, trails and routes from the open ADS-B network."
+    />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 L35 22 L60 36 L60 42 L35 34 L34 48 L42 54 L42 58 L32 55 L22 58 L22 54 L30 48 L29 34 L4 42 L4 36 L29 22 L32 4 Z' fill='%2300f0dc'/%3E%3C/svg%3E"
@@ -11,34 +15,64 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap"
       rel="stylesheet"
     />
   </head>
-  <body>
-    <div id="app">
-      <canvas id="globe" aria-hidden="true"></canvas>
-      <div id="map"></div>
+  <body class="landing">
+    <canvas id="hero-globe" aria-hidden="true"></canvas>
+    <div class="landing__grid" aria-hidden="true"></div>
+    <div class="landing__vignette" aria-hidden="true"></div>
 
-      <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+    <header class="landing__header">
+      <p class="landing__wordmark">SKYWATCH</p>
+      <p class="landing__net">
+        <span class="landing__net-dot"></span>ADS-B NETWORK · ONLINE
+      </p>
+    </header>
 
-      <div class="legend" aria-hidden="true">
-        <span>GND</span>
-        <div class="legend__bar"></div>
-        <span>36K FT</span>
+    <main class="landing__hero">
+      <p class="landing__eyebrow">LIVE RADAR · CONUS SECTOR</p>
+      <h1 class="landing__title">
+        TRACK EVERY<br />
+        FLIGHT ACROSS<br />
+        <span class="landing__title-accent">THE U.S.</span>
+      </h1>
+      <p class="landing__sub">
+        Real-time positions, altitudes, trails and routes for thousands of
+        aircraft over the continental United States — streamed straight from
+        the open ADS-B network.
+      </p>
+
+      <div class="landing__cta-row">
+        <a class="landing__cta" href="/app.html">
+          LAUNCH TRACKER <span class="landing__cta-arrow">→</span>
+        </a>
       </div>
 
-      <div id="skeleton" class="skeleton" aria-label="Loading flight data">
-        <div class="skeleton__bar"></div>
-        <div class="skeleton__bar"></div>
-        <div class="skeleton__bar"></div>
-      </div>
+      <dl class="landing__stats">
+        <div class="landing__stat">
+          <dt>AIRCRAFT LIVE NOW</dt>
+          <dd id="stat-live">———</dd>
+        </div>
+        <div class="landing__stat">
+          <dt>AIRPORTS MAPPED</dt>
+          <dd>527</dd>
+        </div>
+        <div class="landing__stat">
+          <dt>FEED REFRESH</dt>
+          <dd>12<small>s</small></dd>
+        </div>
+      </dl>
+    </main>
 
-      <div id="toast" class="toast" role="alert">
-        <p class="toast__label">FEED FAULT</p>
-        <p class="toast__message"></p>
-      </div>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+    <p class="landing__hint" aria-hidden="true">DRAG TO ROTATE · SCROLL TO ZOOM</p>
+
+    <footer class="landing__footer">
+      <p>DATA · AIRPLANES.LIVE / ADSB.FI / OPENSKY</p>
+      <p>BASEMAP · MAPBOX</p>
+    </footer>
+
+    <script type="module" src="/src/landing.ts"></script>
   </body>
 </html>
