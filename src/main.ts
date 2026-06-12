@@ -7,10 +7,14 @@
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
+// NOTE: line-like visuals use PathLayer, not LineLayer — LineLayer (like
+// IconLayer/TextLayer) silently renders nothing under MapboxOverlay on
+// this GPU/driver combination. PathLayer and the other layers used here
+// are verified working.
 import {
   ScatterplotLayer,
   SolidPolygonLayer,
-  LineLayer,
+  PathLayer,
 } from "@deck.gl/layers";
 import type { Layer, PickingInfo } from "@deck.gl/core";
 
@@ -189,26 +193,33 @@ function buildLayers(): Layer[] {
     });
   }
 
+  const segmentPath = (d: TrailSegment): [number, number][] => [
+    [d.from.longitude, d.from.latitude],
+    [d.to.longitude, d.to.latitude],
+  ];
+
   // Two passes: a wide translucent glow underneath a bright core, so the
   // trail stands out against dense traffic.
-  const trailGlow = new LineLayer<TrailSegment>({
+  const trailGlow = new PathLayer<TrailSegment>({
     id: "flight-trail-glow",
     data: trailSegments,
-    getSourcePosition: (d) => [d.from.longitude, d.from.latitude],
-    getTargetPosition: (d) => [d.to.longitude, d.to.latitude],
+    getPath: segmentPath,
     getColor: (d) => [...altitudeColor(d.to.altitude, false), 70],
     getWidth: 8,
     widthUnits: "pixels",
+    widthMinPixels: 8,
+    capRounded: true,
   });
 
-  const trailLayer = new LineLayer<TrailSegment>({
+  const trailLayer = new PathLayer<TrailSegment>({
     id: "flight-trail",
     data: trailSegments,
-    getSourcePosition: (d) => [d.from.longitude, d.from.latitude],
-    getTargetPosition: (d) => [d.to.longitude, d.to.latitude],
+    getPath: segmentPath,
     getColor: (d) => [...altitudeColor(d.to.altitude, false), 240],
     getWidth: 3,
     widthUnits: "pixels",
+    widthMinPixels: 3,
+    capRounded: true,
   });
 
   // Faint guide lines from the route's origin airport to the aircraft and
@@ -234,24 +245,24 @@ function buildLayers(): Layer[] {
     );
   }
 
-  const routeLayer = new LineLayer<RouteLeg>({
+  const routeLayer = new PathLayer<RouteLeg>({
     id: "route-legs",
     data: routeLegs,
-    getSourcePosition: (d) => d.source,
-    getTargetPosition: (d) => d.target,
-    getColor: [0, 240, 220, 55],
+    getPath: (d) => [d.source, d.target],
+    getColor: [0, 240, 220, 70],
     getWidth: 1.5,
     widthUnits: "pixels",
+    widthMinPixels: 1.5,
   });
 
-  const leaderLines = new LineLayer<FlightState>({
+  const leaderLines = new PathLayer<FlightState>({
     id: "flight-leaders",
     data: flights,
-    getSourcePosition: (d) => [d.longitude, d.latitude],
-    getTargetPosition: leaderTip,
+    getPath: (d) => [[d.longitude, d.latitude], leaderTip(d)],
     getColor: (d) => [...altitudeColor(d.altitude, d.onGround), stale ? 60 : 120],
     getWidth: 1,
     widthUnits: "pixels",
+    widthMinPixels: 1,
     updateTriggers: { getColor: [stale] },
   });
 
