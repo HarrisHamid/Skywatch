@@ -580,6 +580,10 @@ const map = new mapboxgl.Map({
   style: "mapbox://styles/mapbox/dark-v11",
   center: [-96, 38],
   zoom: 4,
+  // Mapbox v3 defaults to the 3D globe projection at low zooms, but the
+  // Deck.gl overlay projects flat mercator — the two drift apart when
+  // zoomed out. Pinning mercator keeps every layer aligned at all zooms.
+  projection: "mercator",
   attributionControl: true,
 });
 
