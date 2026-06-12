@@ -46,6 +46,12 @@ browser ──/api/flights?bbox=…──▶ Express proxy (:3001) ──▶ Ope
   Mapbox dark-v11 ships fully opaque, `main.ts` fades the style's background
   layers to 0.55 opacity on load so the globe bleeds through; land, water,
   and labels stay untouched. The spin freezes under `prefers-reduced-motion`.
+- **Smooth motion:** between polls, `src/motion.ts` dead-reckons each
+  aircraft along its reported track at its reported ground speed, and a
+  ~30 fps render loop repaints so planes glide instead of teleporting.
+  Corrections from each new fix ease in over ~1 s rather than snapping.
+  Extrapolation caps at 30 s past the last fix, and the loop is skipped
+  under `prefers-reduced-motion` (polls then repaint exact positions).
 - **Stale data:** if no successful fetch lands within 30 s, glyphs repaint
   amber (`--accent-amber`) until the feed recovers.
 - **Route completion:** Phase 1 estimates from altitude alone (capped at 50%,

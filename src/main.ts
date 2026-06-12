@@ -19,6 +19,7 @@ import {
 import type { Layer, PickingInfo } from "@deck.gl/core";
 
 import { startPolling, type FlightState } from "./flights";
+import { updateFixes, getDisplayFlights, isMotionReduced } from "./motion";
 import { loadAirports, type Airport } from "./airports";
 import { altitudeColor, formatFeet, formatKnots } from "./altitude";
 import { recordTracks, getTrack, seedTrack, type TrackPoint } from "./tracks";
@@ -161,8 +162,11 @@ function buildLayers(): Layer[] {
   const stale = isDataStale();
   const alpha = stale ? 140 : 255;
   const zoom = map.getZoom();
+  // Dead-reckoned positions (see motion.ts) — every layer draws from
+  // these so glyphs, leader lines, ring, and trail tail stay coherent.
+  const display = getDisplayFlights();
   const selected = selectedIcao
-    ? flights.find((f) => f.icao24 === selectedIcao) ?? null
+    ? display.find((f) => f.icao24 === selectedIcao) ?? null
     : null;
   const trail = selectedIcao ? getTrack(selectedIcao) : [];
 
@@ -257,7 +261,7 @@ function buildLayers(): Layer[] {
 
   const leaderLines = new PathLayer<FlightState>({
     id: "flight-leaders",
-    data: flights,
+    data: display,
     getPath: (d) => [[d.longitude, d.latitude], leaderTip(d)],
     getColor: (d) => [...altitudeColor(d.altitude, d.onGround), stale ? 60 : 120],
     getWidth: 1,
@@ -281,7 +285,7 @@ function buildLayers(): Layer[] {
 
   const planeLayer = new SolidPolygonLayer<FlightState>({
     id: "flight-planes",
-    data: flights,
+    data: display,
     getPolygon: (d) =>
       planePolygon(
         d,
@@ -667,6 +671,22 @@ planesToggle?.addEventListener("click", () => {
   redraw();
 });
 
+// Dead-reckoning animation: between 12 s polls, every frame rebuilds the
+// layers from positions advanced along each track (see motion.ts). ~30 fps
+// is indistinguishable from 60 at glyph speeds and halves the rebuild work.
+// Skipped entirely under reduced motion — polls then repaint exact fixes.
+const FRAME_INTERVAL_MS = 33;
+let lastFrameAt = 0;
+let animationFrame = 0;
+function animate(timestamp: number): void {
+  if (timestamp - lastFrameAt >= FRAME_INTERVAL_MS) {
+    lastFrameAt = timestamp;
+    if (showPlanes && firstDataArrived) redraw();
+  }
+  animationFrame = requestAnimationFrame(animate);
+}
+if (!isMotionReduced()) animationFrame = requestAnimationFrame(animate);
+
 // Clicking empty map space clears the selection.
 map.on("click", (e) => {
   const picked = overlay.pickObject({ x: e.point.x, y: e.point.y, radius: 6 });
@@ -678,6 +698,7 @@ const stopPolling = startPolling({
     flights = next;
     lastUpdateAt = Date.now();
     consecutiveFeedErrors = 0;
+    updateFixes(flights);
     recordTracks(flights);
     if (!firstDataArrived) {
       firstDataArrived = true;
@@ -713,4 +734,5 @@ window.setInterval(() => {
 window.addEventListener("beforeunload", () => {
   stopPolling();
   stopGlobe();
+  cancelAnimationFrame(animationFrame);
 });
